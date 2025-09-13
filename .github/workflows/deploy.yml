@@ -45,6 +45,22 @@ jobs:
             echo "Artifact Registry repository already exists"
           fi
 
+      - name: Create Cloud Build logs bucket if not exists
+        run: |
+          BUCKET_EXISTS=$(gcloud logging buckets list \
+            --location=${{ secrets.GCP_REGION }} \
+            --filter="name:cloudbuild-logs" \
+            --format="value(name)" | wc -l)
+          
+          if [ $BUCKET_EXISTS -eq 0 ]; then
+            echo "Creating Cloud Build logs bucket..."
+            gcloud logging buckets create cloudbuild-logs \
+              --location=${{ secrets.GCP_REGION }} \
+              --description="Dedicated logs bucket for Cloud Build"
+          else
+            echo "Cloud Build logs bucket already exists"
+          fi
+
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
